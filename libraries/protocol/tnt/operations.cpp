@@ -48,6 +48,7 @@ void tank_create_operation::get_impacted_accounts(flat_set<account_id_type>& imp
    tnt::tank_validator(tnt::tank_schematic::from_create_operation(*this), 100).get_referenced_accounts(impacted);
 }
 
+share_type tank_update_operation::calculate_fee(const fee_parameters_type &params) const {
    return params.base_fee + (fc::raw::pack_size(*this) * params.price_per_byte);
 }
 
