@@ -21,6 +21,12 @@ namespace graphene { namespace wallet {
  */
 object* create_object( const variant& v );
 
+enum authority_type
+{
+   owner,
+   active
+};
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -699,6 +705,311 @@ class wallet_api
                                            const string& referrer_account,
                                            uint32_t referrer_percent,
                                            bool broadcast = false )const;
+
+       /** Updates account public keys
+       *
+       * @param name the name of the existing account
+       * @param old_owner the owner key for the named account to be replaced
+       * @param new_owner the owner key for the named account to be set as new
+       * @param old_active the active key for the named account to be replaced
+       * @param new_active the active key for the named account to be set as new
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction updating account public keys
+       */
+      signed_transaction update_account_keys(string name,
+                                             public_key_type old_owner,
+                                             public_key_type new_owner,
+                                             public_key_type old_active,
+                                             public_key_type new_active,
+                                             bool broadcast = false);
+
+      /**
+       * This method updates the key of an authority for an exisiting account.
+       * Warning: You can create impossible authorities using this method. The method
+       * will fail if you create an impossible owner authority, but will allow impossible
+       * active and posting authorities.
+       *
+       * @param account_name The name of the account whose authority you wish to update
+       * @param type The authority type. e.g. owner or active
+       * @param key The public key to add to the authority
+       * @param weight The weight the key should have in the authority. A weight of 0 indicates the removal of the key.
+       * @param broadcast true if you wish to broadcast the transaction.
+       */
+      signed_transaction update_account_auth_key(string account_name,
+                                                 authority_type type,
+                                                 public_key_type key,
+                                                 weight_type weight,
+                                                 bool broadcast);
+
+       signed_transaction create_custom_permission(string owner,
+                                                  string permission_name,
+                                                  authority auth,
+                                                  bool broadcast = true);
+      signed_transaction update_custom_permission(string owner,
+                                                  custom_permission_id_type permission_id,
+                                                  fc::optional<authority> new_auth,
+                                                  bool broadcast = true);
+      signed_transaction delete_custom_permission(string owner,
+                                                  custom_permission_id_type permission_id,
+                                                  bool broadcast = true);
+      signed_transaction create_custom_account_authority(string owner,
+                                                         custom_permission_id_type permission_id,
+                                                         int operation_type,
+                                                         fc::time_point_sec valid_from,
+                                                         fc::time_point_sec valid_to,
+                                                         bool broadcast = true);
+      signed_transaction update_custom_account_authority(string owner,
+                                                         custom_account_authority_id_type auth_id,
+                                                         fc::optional<fc::time_point_sec> new_valid_from,
+                                                         fc::optional<fc::time_point_sec> new_valid_to,
+                                                         bool broadcast = true);
+      signed_transaction delete_custom_account_authority(string owner,
+                                                         custom_account_authority_id_type auth_id,
+                                                         bool broadcast = true);
+      vector<custom_permission_object> get_custom_permissions(string owner) const;
+      fc::optional<custom_permission_object> get_custom_permission_by_name(string owner, string permission_name) const;
+      vector<custom_account_authority_object> get_custom_account_authorities(string owner) const;
+      vector<custom_account_authority_object> get_custom_account_authorities_by_permission_id(custom_permission_id_type permission_id) const;
+      vector<custom_account_authority_object> get_custom_account_authorities_by_permission_name(string owner, string permission_name) const;
+      vector<authority> get_active_custom_account_authorities_by_operation(string owner, int operation_type) const;
+
+      /////////
+      // NFT //
+      /////////
+      /**
+       * @brief Creates NFT metadata
+       * @param owner_account_id_or_name Owner account ID or name
+       * @param name Name of the token group
+       * @param symbol Symbol of the token group
+       * @param base_uri Base URI for token URI
+       * @param revenue_partner revenue partner for this type of Token
+       * @param revenue_split revenue split for the sale
+       * @param is_transferable can transfer the NFT or not
+       * @param is_sellable can sell NFT or not
+       * @param role_id account role id
+       * @param max_supply max supply of NTFs
+       * @param lottery_options lottery options
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction transfering the funds
+       */
+      signed_transaction nft_metadata_create(string owner_account_id_or_name,
+                                    string name,
+                                    string symbol,
+                                    string base_uri,
+                                    optional<string> revenue_partner,
+                                    optional<uint16_t> revenue_split,
+                                    bool is_transferable,
+                                    bool is_sellable,
+                                    optional<account_role_id_type> role_id,
+                                    optional<share_type> max_supply,
+                                    optional<nft_lottery_options> lottery_options,
+                                    bool broadcast);
+
+      /**
+       * @brief Updates NFT metadata
+       * @param owner_account_id_or_name Owner account ID or name
+       * @param nft_metadata_id Metadata ID to modify
+       * @param name Name of the token group
+       * @param symbol Symbol of the token group
+       * @param base_uri Base URI for token URI
+       * @param revenue_partner revenue partner for this type of Token
+       * @param revenue_split revenue split for the sale
+       * @param is_transferable can transfer the NFT or not
+       * @param is_sellable can sell NFT or not
+       * @param role_id account role id
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction transfering the funds
+       */
+      signed_transaction nft_metadata_update(string owner_account_id_or_name,
+                                    nft_metadata_id_type nft_metadata_id,
+                                    optional<string> name,
+                                    optional<string> symbol,
+                                    optional<string> base_uri,
+                                    optional<string> revenue_partner,
+                                    optional<uint16_t> revenue_split,
+                                    optional<bool> is_transferable,
+                                    optional<bool> is_sellable,
+                                    optional<account_role_id_type> role_id,
+                                    bool broadcast);
+
+      /**
+       * @brief Creates NFT
+       * @param metadata_owner_account_id_or_name NFT metadata owner account ID or name
+       * @param metadata_id NFT metadata ID to which token will belong
+       * @param owner_account_id_or_name Owner account ID or name
+       * @param approved_account_id_or_name Approved account ID or name
+       * @param token_uri Token URI (Will be combined with metadata base_uri if its not empty)
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction transfering the funds
+       */
+      signed_transaction nft_create(string metadata_owner_account_id_or_name,
+                                    nft_metadata_id_type metadata_id,
+                                    string owner_account_id_or_name,
+                                    string approved_account_id_or_name,
+                                    string token_uri,
+                                    bool broadcast);
+
+      /**
+       * @brief Returns the number of NFT owned by account
+       * @param owner_account_id_or_name Owner account ID or name
+       * @return Number of NFTs owned by account
+       */
+      uint64_t nft_get_balance(string owner_account_id_or_name) const;
+
+      /**
+       * @brief Returns the NFT owner
+       * @param token_id NFT ID
+       * @return NFT owner account ID
+       */
+      optional<account_id_type> nft_owner_of(const nft_id_type token_id) const;
+
+      /**
+       * @brief Transfers NFT safely
+       * @param operator_account_id_or_name Operators account ID or name
+       * @param from_account_id_or_name Senders account ID or name
+       * @param to_account_id_or_name Receivers account ID or name
+       * @param token_id NFT ID
+       * @param data Non mandatory data
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction transfering NFT
+       */
+      signed_transaction nft_safe_transfer_from(string operator_account_id_or_name,
+                                                string from_account_id_or_name,
+                                                string to_account_id_or_name,
+                                                nft_id_type token_id,
+                                                string data,
+                                                bool broadcast);
+
+      /**
+       * @brief Transfers NFT
+       * @param operator_account_id_or_name Operators account ID or name
+       * @param from_account_id_or_name Senders account ID or name
+       * @param to_account_id_or_name Receivers account ID or name
+       * @param token_id NFT ID
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction transfering NFT
+       */
+      signed_transaction nft_transfer_from(string operator_account_id_or_name,
+                                           string from_account_id_or_name,
+                                           string to_account_id_or_name,
+                                           nft_id_type token_id,
+                                           bool broadcast);
+
+      /**
+       * @brief Sets approved account for NFT
+       * @param operator_account_id_or_name Operators account ID or name
+       * @param approved_account_id_or_name Senders account ID or name
+       * @param token_id NFT ID
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction setting approving account for NFT
+       */
+      signed_transaction nft_approve(string operator_account_id_or_name,
+                                     string approved_account_id_or_name,
+                                     nft_id_type token_id,
+                                     bool broadcast);
+
+      /**
+       * @brief Sets approval for all NFT owned by owner
+       * @param owner_account_id_or_name Owner account ID or name
+       * @param operator_account_id_or_name Operator account ID or name
+       * @param approved true if approved
+       * @param broadcast  true to broadcast transaction to the network
+       * @return Signed transaction setting approvals for all NFT owned by owner
+       */
+      signed_transaction nft_set_approval_for_all(string owner_account_id_or_name,
+                                                  string operator_account_id_or_name,
+                                                  bool approved,
+                                                  bool broadcast);
+
+      /**
+       * @brief Returns the NFT approved account ID
+       * @param token_id NFT ID
+       * @return NFT approved account ID
+       */
+      optional<account_id_type> nft_get_approved(const nft_id_type token_id) const;
+
+      /**
+       * @brief Returns operator approved state for all NFT owned by owner
+       * @param owner_account_id_or_name NFT owner account ID or name
+       * @param operator_account_id_or_name NFT operator account ID or name
+       * @return True if operator is approved for all NFT owned by owner, else False
+       */
+      bool nft_is_approved_for_all(string owner_account_id_or_name, string operator_account_id_or_name) const;
+
+      /**
+       * @brief Returns all tokens
+       * @param limit the maximum number of NFT objects to return (max: 100)
+       * @param lower_id ID of the first NFT object to include in the list.
+       * @return Returns vector of NFT objects, empty vector if none
+       */
+      vector<nft_object> nft_get_all_tokens(uint32_t limit, optional<nft_id_type> lower_id) const;
+
+      /**
+       * @brief Returns all tokens owned by owner
+       * @param owner NFT owner account ID
+       * @param limit the maximum number of NFT objects to return (max: 100)
+       * @param lower_id ID of the first NFT object to include in the list.
+       * @return Returns vector of NFT objects, empty vector if none
+       */
+      vector<nft_object> nft_get_tokens_by_owner(account_id_type owner, uint32_t limit, optional<nft_id_type> lower_id) const;
+
+      /**
+       * @brief Returns all NFT metadata objects owned by owner
+       * @param owner NFT owner account ID
+       * @param limit the maximum number of NFT metadata objects to return (max: 100)
+       * @param lower_id ID of the first NFT metadata object to include in the list.
+       * @return Returns vector of NFT metadata objects, empty vector if none
+       */
+      vector<nft_metadata_object> nft_get_metadata_by_owner(account_id_type owner, uint32_t limit, optional<nft_metadata_id_type> lower_id) const;
+      signed_transaction nft_lottery_buy_ticket( nft_metadata_id_type lottery, account_id_type buyer, uint64_t tickets_to_buy, bool broadcast );
+
+      signed_transaction create_offer(set<nft_id_type> item_ids,
+                                      string issuer_accound_id_or_name,
+                                      asset minimum_price,
+                                      asset maximum_price,
+                                      bool buying_item,
+                                      time_point_sec offer_expiration_date,
+                                      optional<memo_data> memo,
+                                      bool broadcast);
+      signed_transaction create_bid(string bidder_account_id_or_name,
+                                    asset bid_price,
+                                    offer_id_type offer_id,
+                                    bool broadcast);
+      signed_transaction cancel_offer(string issuer_account_id_or_name,
+                                      offer_id_type offer_id,
+                                      bool broadcast);
+      vector<offer_object> list_offers(uint32_t limit, optional<offer_id_type> lower_id) const;
+      vector<offer_object> list_sell_offers(uint32_t limit, optional<offer_id_type> lower_id) const;
+      vector<offer_object> list_buy_offers(uint32_t limit, optional<offer_id_type> lower_id) const;
+      vector<offer_history_object> list_offer_history(uint32_t limit, optional<offer_history_id_type> lower_id) const;
+      vector<offer_object> get_offers_by_issuer(string issuer_account_id_or_name,
+                                                uint32_t limit, optional<offer_id_type> lower_id) const;
+      vector<offer_object> get_offers_by_item(const nft_id_type item, uint32_t limit, optional<offer_id_type> lower_id) const;
+      vector<offer_history_object> get_offer_history_by_issuer(string issuer_account_id_or_name, uint32_t limit, optional<offer_history_id_type> lower_id) const;
+      vector<offer_history_object> get_offer_history_by_item(const nft_id_type item, uint32_t limit, optional<offer_history_id_type> lower_id) const;
+      vector<offer_history_object> get_offer_history_by_bidder(string bidder_account_id_or_name, uint32_t limit, optional<offer_history_id_type> lower_id) const;
+
+      signed_transaction create_account_role(string owner_account_id_or_name,
+                                             string name,
+                                             string metadata,
+                                             flat_set<int> allowed_operations,
+                                             flat_set<account_id_type> whitelisted_accounts,
+                                             time_point_sec valid_to,
+                                             bool broadcast);
+      signed_transaction update_account_role(string owner_account_id_or_name,
+                                             account_role_id_type role_id,
+                                             optional<string> name,
+                                             optional<string> metadata,
+                                             flat_set<int> operations_to_add,
+                                             flat_set<int> operations_to_remove,
+                                             flat_set<account_id_type> accounts_to_add,
+                                             flat_set<account_id_type> accounts_to_remove,
+                                             optional<time_point_sec> valid_to,
+                                             bool broadcast);
+      signed_transaction delete_account_role(string owner_account_id_or_name,
+                                             account_role_id_type role_id,
+                                             bool broadcast);
+      vector<account_role_object> get_account_roles_by_owner(string owner_account_id_or_name) const;
 
       /**
        *  Upgrades an account to prime status.
@@ -1839,6 +2150,8 @@ FC_API( graphene::wallet::wallet_api,
         (suggest_brain_key)
         (derive_owner_keys_from_brain_key)
         (register_account)
+        (update_account_keys)
+        (update_account_auth_key)
         (upgrade_account)
         (create_account_with_brain_key)
         (sell_asset)
@@ -1881,6 +2194,33 @@ FC_API( graphene::wallet::wallet_api,
         (htlc_redeem)
         (htlc_extend)
         (get_vesting_balances)
+        (nft_metadata_create)
+        (nft_metadata_update)
+        (nft_create)
+        (nft_get_balance)
+        (nft_owner_of)
+        (nft_safe_transfer_from)
+        (nft_transfer_from)
+        (nft_approve)
+        (nft_set_approval_for_all)
+        (nft_get_approved)
+        (nft_is_approved_for_all)
+        (nft_get_all_tokens)
+        (create_offer)
+        (create_bid)
+        (cancel_offer)
+        (list_offers)
+        (list_sell_offers)
+        (list_buy_offers)
+        (list_offer_history)
+        (get_offers_by_issuer)
+        (get_offers_by_item)
+        (get_offer_history_by_issuer)
+        (get_offer_history_by_item)
+        (get_offer_history_by_bidder)
+        (create_account_role)
+        (update_account_role)
+        (delete_account_role)
         (withdraw_vesting)
         (vote_for_committee_member)
         (vote_for_witness)
@@ -1949,5 +2289,17 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (account_store_map)
         (get_account_storage)
+        (create_custom_permission)
+        (update_custom_permission)
+        (delete_custom_permission)
+        (create_custom_account_authority)
+        (update_custom_account_authority)
+        (delete_custom_account_authority)
+        (get_custom_permissions)
+        (get_custom_permission_by_name)
+        (get_custom_account_authorities)
+        (get_custom_account_authorities_by_permission_id)
+        (get_custom_account_authorities_by_permission_name)
+        (get_active_custom_account_authorities_by_operation)
         (quit)
       )

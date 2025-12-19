@@ -200,6 +200,8 @@ namespace graphene { namespace chain {
          const call_order_object* find_least_collateralized_short( const asset_bitasset_data_object& bitasset,
                                                                    bool force_by_collateral_index )const;
 
+         vector<authority> get_account_custom_authorities(account_id_type account, const operation& op)const;
+
          //////////////////// db_init.cpp ////////////////////
          ///@{
 
@@ -730,6 +732,7 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          void update_credit_offers_and_deals();
          void clear_expired_htlcs();
+         void finalize_expired_offers();
 
          ///Steps performed only at maintenance intervals
          ///@{

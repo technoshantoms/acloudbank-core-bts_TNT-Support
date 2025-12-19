@@ -447,6 +447,76 @@ struct get_impacted_account_visitor
       if (op.asset_path.size() > 0 && op.asset_path.front().is_type<account_id_type>())
          _impacted.insert(op.asset_path.front().get<account_id_type>());
    }
+   void operator()( const custom_permission_create_operation& op ){
+      _impacted.insert( op.owner_account );
+   }
+   void operator()( const custom_permission_update_operation& op ){
+      _impacted.insert( op.owner_account );
+   }
+   void operator()( const custom_permission_delete_operation& op ){
+      _impacted.insert( op.owner_account );
+   }
+   void operator()( const custom_account_authority_create_operation& op ){
+      _impacted.insert( op.owner_account );
+   }
+   void operator()( const custom_account_authority_update_operation& op ){
+      _impacted.insert( op.owner_account );
+   }
+   void operator()( const custom_account_authority_delete_operation& op ){
+      _impacted.insert( op.owner_account );
+   }
+   void operator()( const nft_metadata_create_operation& op ) {
+      _impacted.insert( op.owner );
+   }
+   void operator()( const nft_metadata_update_operation& op ) {
+      _impacted.insert( op.owner );
+   }
+   void operator()( const nft_mint_operation& op ) {
+      _impacted.insert( op.owner );
+   }
+   void operator()( const nft_safe_transfer_from_operation& op ) {
+      _impacted.insert( op.from );
+      _impacted.insert( op.to );
+   }
+   void operator()( const nft_approve_operation& op ) {
+      _impacted.insert( op.operator_ );
+      _impacted.insert( op.approved );
+   }
+   void operator()( const nft_set_approval_for_all_operation& op ) {
+      _impacted.insert( op.owner );
+      _impacted.insert( op.operator_ );
+   }
+   void operator()( const offer_operation& op ) { 
+      _impacted.insert( op.issuer );   
+   }
+   void operator()( const bid_operation& op ) {
+     _impacted.insert( op.bidder );
+   }
+   void operator()( const cancel_offer_operation& op ) {
+     _impacted.insert( op.issuer );
+   }
+   void operator()( const finalize_offer_operation& op ) {
+       _impacted.insert( op.fee_paying_account );
+   }
+   void operator()( const account_role_create_operation& op ){
+      _impacted.insert( op.owner );
+   }
+   void operator()( const account_role_update_operation& op ){
+      _impacted.insert( op.owner );
+   }
+   void operator()( const account_role_delete_operation& op ){
+      _impacted.insert( op.owner );
+   }
+   void operator()( const nft_lottery_token_purchase_operation& op ){
+      _impacted.insert( op.buyer );
+   }
+   void operator()( const nft_lottery_reward_operation& op ) {
+      _impacted.insert( op.winner );
+   }
+   void operator()( const nft_lottery_end_operation& op ) {}
+   void operator()( const son_create_operation& op ) {
+      _impacted.insert( op.owner_account );
+   }
 };
 
 } // namespace detail
@@ -621,6 +691,8 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
              case impl_buyback_object_type:
               break;
              case impl_fba_accumulator_object_type:
+              break;
+              case impl_nft_lottery_balance_object_type:
               break;
              case impl_collateral_bid_object_type:{
               const auto* aobj = dynamic_cast<const collateral_bid_object*>(obj);

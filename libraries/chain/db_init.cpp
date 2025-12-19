@@ -54,9 +54,36 @@
 
 #include <graphene/chain/tnt/evaluators.hpp>
 
+//NFT MINT
+
+#include <graphene/chain/custom_permission_object.hpp>
+#include <graphene/chain/custom_account_authority_object.hpp>
+#include <graphene/chain/offer_object.hpp>
+#include <graphene/chain/nft_object.hpp>
+//NFT MINT
+#include <graphene/chain/custom_permission_evaluator.hpp>
+#include <graphene/chain/custom_account_authority_evaluator.hpp>
+#include <graphene/chain/offer_evaluator.hpp>
+#include <graphene/chain/nft_evaluator.hpp>
+
+#include <graphene/chain/nft_lottery_evaluator.hpp>
+
 namespace graphene { namespace chain {
 
-   
+   // FOR NFT
+/*const uint8_t nft_object::space_id;
+const uint8_t nft_object::type_id;
+const uint8_t offer_object::space_id;
+const uint8_t offer_object::type_id;
+
+const uint8_t offer_history_object::space_id;
+const uint8_t offer_history_object::type_id;
+
+const uint8_t nft_lottery_balance_object::space_id;
+const uint8_t nft_lottery_balance_object::type_id;
+
+*/
+
 //space_id
 // const uint8_t tank_object::space_id;
  //const uint8_t tank_object::type_id;
@@ -143,6 +170,51 @@ void database::initialize_evaluators()
    register_evaluator<credit_offer_accept_evaluator>();
    register_evaluator<credit_deal_repay_evaluator>();
    register_evaluator<credit_deal_update_evaluator>();
+   // For NFT
+   register_evaluator<create_custom_permission_evaluator>();
+   register_evaluator<update_custom_permission_evaluator>();
+   register_evaluator<delete_custom_permission_evaluator>();
+   register_evaluator<create_custom_account_authority_evaluator>();
+   register_evaluator<update_custom_account_authority_evaluator>();
+   register_evaluator<delete_custom_account_authority_evaluator>();
+   register_evaluator<offer_evaluator>();
+   register_evaluator<bid_evaluator>();
+   register_evaluator<cancel_offer_evaluator>();
+   register_evaluator<finalize_offer_evaluator>();
+   register_evaluator<nft_metadata_create_evaluator>();
+   register_evaluator<nft_metadata_update_evaluator>();
+   register_evaluator<nft_mint_evaluator>();
+   register_evaluator<nft_safe_transfer_from_evaluator>();
+   register_evaluator<nft_approve_evaluator>();
+   register_evaluator<nft_set_approval_for_all_evaluator>();
+   register_evaluator<account_role_create_evaluator>();
+   register_evaluator<account_role_update_evaluator>();
+   register_evaluator<account_role_delete_evaluator>();
+   register_evaluator<nft_lottery_token_purchase_evaluator>();
+   register_evaluator<nft_lottery_reward_evaluator>();
+   register_evaluator<nft_lottery_end_evaluator>();
+   register_evaluator<create_custom_permission_evaluator>();
+   register_evaluator<update_custom_permission_evaluator>();
+   register_evaluator<delete_custom_permission_evaluator>();
+   register_evaluator<create_custom_account_authority_evaluator>();
+   register_evaluator<update_custom_account_authority_evaluator>();
+   register_evaluator<delete_custom_account_authority_evaluator>();
+   register_evaluator<offer_evaluator>();
+   register_evaluator<bid_evaluator>();
+   register_evaluator<cancel_offer_evaluator>();
+   register_evaluator<finalize_offer_evaluator>();
+   register_evaluator<nft_metadata_create_evaluator>();
+   register_evaluator<nft_metadata_update_evaluator>();
+   register_evaluator<nft_mint_evaluator>();
+   register_evaluator<nft_safe_transfer_from_evaluator>();
+   register_evaluator<nft_approve_evaluator>();
+   register_evaluator<nft_set_approval_for_all_evaluator>();
+   register_evaluator<account_role_create_evaluator>();
+   register_evaluator<account_role_update_evaluator>();
+   register_evaluator<account_role_delete_evaluator>();
+   register_evaluator<nft_lottery_token_purchase_evaluator>();
+   register_evaluator<nft_lottery_reward_evaluator>();
+   register_evaluator<nft_lottery_end_evaluator>();
 }
 void database::initialize_indexes()
 {
@@ -171,6 +243,18 @@ void database::initialize_indexes()
    add_index< primary_index<samet_fund_index> >();
    add_index< primary_index<credit_offer_index> >();
    add_index< primary_index<credit_deal_index> >();
+   
+ //For NFT
+   add_index< primary_index<custom_permission_index> >();
+   add_index< primary_index<custom_account_authority_index> >();
+   auto offer_idx = add_index< primary_index<offer_index> >();
+   offer_idx->add_secondary_index<offer_item_index>();
+
+   add_index< primary_index<nft_metadata_index > >();
+   add_index< primary_index<nft_index > >();
+
+   add_index< primary_index<offer_history_index                           > >();
+   add_index< primary_index<nft_lottery_balance_index                     > >();
 
    //Implementation object indexes
    add_index< primary_index<transaction_index                             > >();

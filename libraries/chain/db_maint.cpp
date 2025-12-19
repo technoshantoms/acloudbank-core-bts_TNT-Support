@@ -28,6 +28,8 @@
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/custom_authority_object.hpp>
 
+#include <graphene/chain/custom_account_authority_object.hpp>
+
 namespace graphene { namespace chain {
 
 template<class Index>
@@ -939,7 +941,8 @@ void database::process_bitassets()
    const auto& update_bitasset = [this,&head_time,head_epoch_seconds,after_hf_core_518]
                                  ( asset_bitasset_data_object &o )
    {
-      o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
+      o.force_settled_volume = 0; 
+      // Reset all BitAsset force settlement volumes to zero
 
       // clear expired feeds if smartcoin (witness_fed or committee_fed) && check overflow
       if( after_hf_core_518 && o.options.feed_lifetime_sec < head_epoch_seconds
@@ -1095,6 +1098,42 @@ void process_hf_868_890( database& db )
    } // for each market issued asset
 }
 
+void rolling_period_start(database& db)
+{
+   if(db.head_block_time() >= HARDFORK_GPOS_TIME)
+   {
+      auto gpo = db.get_global_properties();
+      auto period_start = db.get_global_properties().parameters.gpos_period_start();
+      auto vesting_period = db.get_global_properties().parameters.gpos_period();
+
+      auto now = db.head_block_time();
+      if(now.sec_since_epoch() >= (period_start + vesting_period))
+      {
+         // roll
+         db.modify(db.get_global_properties(), [period_start, vesting_period](global_property_object& p) {
+            p.parameters.extensions.value.gpos_period_start =  period_start + vesting_period;
+         });
+      }
+   }
+}
+
+void clear_expired_custom_account_authorities(database& db)
+{
+   const auto& cindex = db.get_index_type<custom_account_authority_index>().indices().get<by_expiration>();
+   while(!cindex.empty() && cindex.begin()->valid_to < db.head_block_time())
+   {
+      db.remove(*cindex.begin());
+   }
+}
+
+void clear_expired_account_roles(database& db)
+{
+   const auto& arindex = db.get_index_type<account_role_index>().indices().get<by_expiration>();
+   while(!arindex.empty() && arindex.begin()->valid_to < db.head_block_time())
+   {
+      db.remove(*arindex.begin());
+   }
+}
 
 /**
  * @brief Remove any custom active authorities whose expiration dates are in the past
@@ -1576,5 +1615,9 @@ void database::perform_chain_maintenance( const signed_block& next_block )
    //   it needs to know the next_maintenance_time
    process_budget();
 }
-
+// Ideally we have to do this after every block but that leads to longer block applicaiton/replay times.
+   // So keep it here as it is not critical. valid_to check ensures
+   // these custom account auths and account roles are not usable.
+   clear_expired_custom_account_authorities(*this);
+   clear_expired_account_roles(*this);
 } }

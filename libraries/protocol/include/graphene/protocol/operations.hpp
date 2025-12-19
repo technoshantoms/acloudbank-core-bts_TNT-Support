@@ -26,6 +26,14 @@
 #include <graphene/protocol/witness.hpp>
 #include <graphene/protocol/worker.hpp>
 
+#include <graphene/protocol/nft_lottery.hpp>
+
+//nft
+#include <graphene/protocol/custom_permission.hpp>
+#include <graphene/protocol/custom_account_authority.hpp>
+#include <graphene/protocol/offer.hpp>
+#include <graphene/protocol/nft_ops.hpp>
+
 namespace graphene { namespace protocol {
 
    /**
@@ -119,7 +127,27 @@ namespace graphene { namespace protocol {
             /* 82 */ tap_open_operation,
             /* 83 */ tap_connect_operation,
             /* 84 */  account_fund_connection_operation,
-            /* 84 */ connection_fund_account_operation 
+            /* 84 */ connection_fund_account_operation, // VIRTUAL
+            /* 85 */ sweeps_vesting_claim_operation,
+            /* 86 */ custom_permission_create_operation,
+            /* 87 */ custom_permission_update_operation,
+            /* 88 */ custom_permission_delete_operation,
+            /* 89 */ custom_account_authority_create_operation,
+            /* 90 */ custom_account_authority_update_operation,
+            /* 91 */ custom_account_authority_delete_operation,
+            /* 92 */ offer_operation,
+            /* 93 */ bid_operation,
+            /* 94 */ cancel_offer_operation,
+            /* 95 */ finalize_offer_operation,
+            /* 96 */ nft_metadata_create_operation,
+            /* 97 */ nft_metadata_update_operation,
+            /* 98 */ nft_mint_operation,
+            /* 99 */ nft_safe_transfer_from_operation,
+            /* 100 */ nft_approve_operation,
+            /* 101 */ nft_set_approval_for_all_operation,
+            /* 102 */ nft_lottery_token_purchase_operation,
+            /* 103 */ nft_lottery_reward_operation,
+            /* 104 */ nft_lottery_end_operation,
 
          >;
 
